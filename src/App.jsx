@@ -1,4 +1,4 @@
-import React, {useEffect, useMemo, useState} from "react";
+import React, {useEffect, useState} from "react";
 import "./App.css";
 import Description from "./components/Description.jsx";
 import Options from "./components/Options.jsx";

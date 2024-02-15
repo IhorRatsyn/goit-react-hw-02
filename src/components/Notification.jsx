@@ -6,6 +6,4 @@ const Notification = () => {
     )
 };
 
-
-Notification.propTypes = {};
 export default Notification;
