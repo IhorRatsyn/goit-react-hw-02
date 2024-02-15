@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, {useEffect, useMemo, useState} from "react";
 import "./App.css";
 import Description from "./components/Description.jsx";
 import Options from "./components/Options.jsx";
@@ -12,23 +12,29 @@ const defaultState = {
   bad: 0,
 };
 
-const getStorage = () =>
-  JSON.parse(localStorage.getItem(localStorageKey)) || defaultState;
-const setStorage = (val) =>
-  localStorage.setItem(localStorageKey, JSON.stringify(val));
-
 function App() {
-  const title = "Sip Happens Café";
-  const desc =
-    "Please leave your feedback about our service by selecting one of the options below.";
+  const [totalFeedback, setTotalFeedback] = useState(0);
+  const [positiveFeedback, setPositiveFeedback] = useState(0);
+  const [options, setOptions] = useState(() => {
+    return JSON.parse(localStorage.getItem(localStorageKey)) || defaultState
+  });
 
-  const [options, setOptions] = useState(getStorage);
+  useEffect(() => {
+    const {good, neutral, bad} = options;
+    const allSum = good + neutral + bad;
+    setTotalFeedback(allSum);
+
+    const positivePercent = Math.round(((good + neutral) / allSum) * 100);
+    setPositiveFeedback(allSum ? positivePercent : 0);
+
+    window.localStorage.setItem(localStorageKey, JSON.stringify(options));
+  }, [options]);
 
   const onOptionsClick = (type) => {
-    const newOptions = { ...options };
-    newOptions[type] += 1;
-    setOptions(newOptions);
-    setStorage(newOptions);
+    setOptions({
+      ...options,
+      [type]: options[type] + 1
+    });
   };
 
   const onReset = () => {
@@ -38,17 +44,30 @@ function App() {
   return (
     <>
       <div>
-        <Description title={title} desc={desc} />
+        <Description title="Sip Happens Café" desc="Please leave your feedback about our service by selecting one of the options below." />
         <Options
           options={Object.keys(options)}
           handlerClick={onOptionsClick}
           onReset={onReset}
         />
-        <Feedback
-          good={options.good}
-          bad={options.bad}
-          neutral={options.neutral}
-        />
+        <div className="options">
+          {totalFeedback ? (
+                 <div>
+                   <Feedback
+                       good={options.good}
+                       bad={options.bad}
+                       neutral={options.neutral}
+                       positiveFeedback={positiveFeedback}
+                       totalFeedback={totalFeedback}
+                   />
+
+                 </div>
+            ) : (
+            <div>No feedback yet</div>
+            )}
+        </div>
+
+
       </div>
     </>
   );
