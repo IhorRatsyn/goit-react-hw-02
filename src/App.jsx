@@ -3,6 +3,7 @@ import "./App.css";
 import Description from "./components/Description.jsx";
 import Options from "./components/Options.jsx";
 import Feedback from "./components/Feedback.jsx";
+import Notification from "./components/Notification.jsx";
 
 const localStorageKey = "options";
 
@@ -13,24 +14,26 @@ const defaultState = {
 };
 
 function App() {
-  const [totalFeedback, setTotalFeedback] = useState(0);
-  const [positiveFeedback, setPositiveFeedback] = useState(0);
   const [options, setOptions] = useState(() => {
     return JSON.parse(localStorage.getItem(localStorageKey)) || defaultState
   });
 
   useEffect(() => {
-    const {good, neutral, bad} = options;
-    const allSum = good + neutral + bad;
-    setTotalFeedback(allSum);
-
-    const positivePercent = Math.round(((good + neutral) / allSum) * 100);
-    setPositiveFeedback(allSum ? positivePercent : 0);
-
     window.localStorage.setItem(localStorageKey, JSON.stringify(options));
   }, [options]);
 
-  const onOptionsClick = (type) => {
+  const reducePositiveFeedback = (options, total) => {
+    const {good, neutral} = options;
+    const positivePercent = Math.round(((good + neutral) / total) * 100);
+    return total ? positivePercent : 0;
+  }
+
+  const reduceTotalFeedback = (options) => {
+    const {good, neutral, bad} = options;
+    return good + neutral + bad
+  }
+
+  const addOption = (type) => {
     setOptions({
       ...options,
       [type]: options[type] + 1
@@ -41,13 +44,17 @@ function App() {
     setOptions(defaultState);
   };
 
+  const totalFeedback = reduceTotalFeedback(options)
+  const positiveFeedback = reducePositiveFeedback(options, totalFeedback)
+
   return (
     <>
       <div>
         <Description title="Sip Happens Café" desc="Please leave your feedback about our service by selecting one of the options below." />
         <Options
           options={Object.keys(options)}
-          handlerClick={onOptionsClick}
+          onFeedbackSelect={addOption}
+          hasReset={!!totalFeedback}
           onReset={onReset}
         />
         <div className="options">
@@ -63,7 +70,7 @@ function App() {
 
                  </div>
             ) : (
-            <div>No feedback yet</div>
+            <Notification/>
             )}
         </div>
 
